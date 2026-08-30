@@ -74,3 +74,4 @@ Offsets came from an il2cpp dump of build `0382` (not bundled — it's huge).
 
 This is a learning project about iOS memory access and Unity internals. Using it on
 live servers will likely get your account banned. Your call, your risk.
+# pasta
