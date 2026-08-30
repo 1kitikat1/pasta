@@ -8,8 +8,9 @@ workflows:
     triggering:
       events:
         - push
-      branches:
-        - main
+      branch_patterns:
+        - pattern: main
+          include: true
     scripts:
       - name: Setup Theos SDK
         script: |
@@ -26,19 +27,14 @@ workflows:
       - name: Build Application and Package to IPA
         script: |
           echo "=== Сборка приложения ==="
-          # Собираем проект в релизном режиме
           make clean package FINALPACKAGE=1
           
           echo "=== Упаковка в .ipa/.tipa для TrollStore ==="
-          # Находим скомпилированную папку приложения .app
           APP_DIR=$(find .theos/obj/ -name "*.app" -type d | head -n 1)
           
           if [ -d "$APP_DIR" ]; then
-            # Создаем структуру для классического IPA
             mkdir -p Payload
             cp -r "$APP_DIR" Payload/
-            
-            # Упаковываем в .ipa и дублируем как .tipa (для совместимости)
             zip -r StandoffLauncher.ipa Payload
             cp StandoffLauncher.ipa StandoffLauncher.tipa
             echo "Сборка IPA успешно завершена!"
