@@ -16,12 +16,18 @@ workflows:
         script: |
           echo "=== Установка Theos SDK ==="
           rm -rf ./theos
-          # ЗДЕСЬ ИСПОЛЬЗУЕТСЯ ПОЛНАЯ ССЫЛКА НА РЕПОЗИТОРИЙ THEOS
           git clone --recursive https://github.com/1kitikat1/pasta ./theos
           
           echo "=== Скачивание iOS SDK ==="
-          # ЗДЕСЬ ИСПОЛЬЗУЕТСЯ ПОЛНАЯ ССЫЛКА НА СКАЧИВАНИЕ SDKФАЙЛА
-          curl -LO https://github.com
+          # Явно принуждаем curl сохранить файл под конкретным именем
+          curl -sL "https://github.com/1kitikat1/pasta" -o iPhoneOS14.5.sdk.tar.xz
+          
+          # Проверяем, скачался ли файл, чтобы не упасть дальше
+          if [ ! -f "iPhoneOS14.5.sdk.tar.xz" ]; then
+            echo "❌ Ошибка: SDK файл не был скачан!"
+            exit 1
+          fi
+          
           tar -xf iPhoneOS14.5.sdk.tar.xz -C ./theos/sdks/
           rm iPhoneOS14.5.sdk.tar.xz
           
