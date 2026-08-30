@@ -1,6 +1,6 @@
 workflows:
-  standoff-launcher-build:
-    name: Standoff 2 Launcher IPA Build
+  xternalz-build:
+    name: XternalZ TrollStore Build
     max_build_duration: 20
     instance_type: mac_mini_m1
     environment:
@@ -12,37 +12,33 @@ workflows:
         - pattern: main
           include: true
     scripts:
-      - name: Setup Theos SDK
+      - name: Setup Theos and iOS SDK
         script: |
           echo "=== Установка Theos SDK ==="
-          export THEOS=$HOME/theos
-          git clone --recursive https://github.com $THEOS
+          # Клонируем Theos в корень диска, как прописано во многих Makefile
+          sudo mkdir -p /theos
+          sudo chown -R $(whoami) /theos
+          git clone --recursive https://github.com /theos
           
           echo "=== Скачивание iOS SDK ==="
           curl -LO https://github.com
-          tar -xf iPhoneOS14.5.sdk.tar.xz -C $THEOS/sdks/
+          tar -xf iPhoneOS14.5.sdk.tar.xz -C /theos/sdks/
           rm iPhoneOS14.5.sdk.tar.xz
           
-          echo "export THEOS=$THEOS" >> $CM_ENV
-      - name: Build Application and Package to IPA
+          # Экспортируем переменные окружения
+          echo "export THEOS=/theos" >> $CM_ENV
+          echo "export THEOS=/theos" >> ~/.bash_profile
+      - name: Build XternalZ TIPA
         script: |
-          echo "=== Сборка приложения ==="
-          make clean package FINALPACKAGE=1
+          export THEOS=/theos
           
-          echo "=== Упаковка в .ipa/.tipa для TrollStore ==="
-          APP_DIR=$(find .theos/obj/ -name "*.app" -type d | head -n 1)
+          echo "=== Запуск компиляции XternalZ ==="
+          # Проект XternalZ сам собирает .tipa при вызове этой команды
+          make package FINALPACKAGE=1
           
-          if [ -d "$APP_DIR" ]; then
-            mkdir -p Payload
-            cp -r "$APP_DIR" Payload/
-            zip -r StandoffLauncher.ipa Payload
-            cp StandoffLauncher.ipa StandoffLauncher.tipa
-            echo "Сборка IPA успешно завершена!"
-          else
-            echo "Ошибка: папка .app не найдена. Проверьте ваш Makefile."
-            exit 1
-          fi
+          # Копируем готовый файл в корень для отправки в артефакты
+          cp packages/*.tipa ./ 2>/dev/null || cp packages/*.deb ./ 2>/dev/null || true
     artifacts:
-      - "*.ipa"
       - "*.tipa"
-      - "packages/*.deb"
+      - "*.deb"
+      - "packages/*"
