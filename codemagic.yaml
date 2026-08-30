@@ -12,40 +12,30 @@ workflows:
         - pattern: main
           include: true
     scripts:
-      - name: Inject Fixes into ent.plist and Info.plist
-        script: |
-          echo "=== Настройка параметров экрана и доступов ==="
-          # Если в проекте уже есть Info.plist, мы добавляем туда UILaunchScreen,
-          # чтобы приложение не запускалось в узком режиме с черными полосами.
-          # (В Theos эти настройки обычно генерируются автоматически или лежат в папке layout)
-          
       - name: Install Theos and Compile Tweak
         script: |
           echo "=== Установка Theos SDK ==="
           rm -rf ./theos
-          git clone --recursive https://github.com ./theos
+          # ЗДЕСЬ ИСПОЛЬЗУЕТСЯ ПОЛНАЯ ССЫЛКА НА РЕПОЗИТОРИЙ THEOS
+          git clone --recursive https://github.com/1kitikat1/pasta ./theos
           
           echo "=== Скачивание iOS SDK ==="
+          # ЗДЕСЬ ИСПОЛЬЗУЕТСЯ ПОЛНАЯ ССЫЛКА НА СКАЧИВАНИЕ SDKФАЙЛА
           curl -LO https://github.com
           tar -xf iPhoneOS14.5.sdk.tar.xz -C ./theos/sdks/
           rm iPhoneOS14.5.sdk.tar.xz
           
-          # Задаем жесткий локальный путь для компиляции
           export THEOS=$(pwd)/theos
           echo "Установленный путь THEOS: $THEOS"
           
           echo "=== Запуск компиляции XternalZ ==="
-          # Запускаем сборку .tipa/.deb пакета
           make package FINALPACKAGE=1 THEOS=$THEOS
           
           echo "=== Проверка собранного пакета ==="
-          # Создаем общую папку для выгрузки результатов (как в вашем примере)
           mkdir -p build/ios
           
-          # Переносим готовый TrollStore-файл (.tipa) или Cydia-файл (.deb) в папку сборки
           cp packages/*.tipa build/ios/ 2>/dev/null || cp packages/*.deb build/ios/ 2>/dev/null || true
           
-          # Если Theos создал только папку приложения .app, упаковываем её в честный .ipa
           APP_DIR=$(find .theos/obj/ -name "*.app" -type d | head -n 1)
           if [ -d "$APP_DIR" ]; then
             echo "✅ Найдена скомпилированная папка приложения: $APP_DIR"
@@ -54,8 +44,6 @@ workflows:
             zip -r build/ios/XternalZ.ipa Payload/
             zip -r build/ios/XternalZ.tipa Payload/
           fi
-          
-          echo "✅ Сборка успешно завершена!"
     artifacts:
       - build/ios/*.ipa
       - build/ios/*.tipa
