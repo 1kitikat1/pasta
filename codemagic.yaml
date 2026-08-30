@@ -15,28 +15,28 @@ workflows:
       - name: Setup Theos and iOS SDK
         script: |
           echo "=== Установка Theos SDK ==="
-          # Клонируем Theos в корень диска, как прописано во многих Makefile
-          sudo mkdir -p /theos
-          sudo chown -R $(whoami) /theos
-          git clone --recursive https://github.com /theos
+          # Разворачиваем Theos в домашней папке пользователя, где запись разрешена
+          export THEOS=$HOME/theos
+          rm -rf $THEOS
+          git clone --recursive https://github.com $THEOS
           
           echo "=== Скачивание iOS SDK ==="
           curl -LO https://github.com
-          tar -xf iPhoneOS14.5.sdk.tar.xz -C /theos/sdks/
+          tar -xf iPhoneOS14.5.sdk.tar.xz -C $THEOS/sdks/
           rm iPhoneOS14.5.sdk.tar.xz
           
-          # Экспортируем переменные окружения
-          echo "export THEOS=/theos" >> $CM_ENV
-          echo "export THEOS=/theos" >> ~/.bash_profile
+          # Намертво сохраняем переменную окружения для следующих шагов
+          echo "export THEOS=$THEOS" >> $CM_ENV
       - name: Build XternalZ TIPA
         script: |
-          export THEOS=/theos
+          # Подтягиваем путь к Theos
+          export THEOS=$HOME/theos
           
           echo "=== Запуск компиляции XternalZ ==="
-          # Проект XternalZ сам собирает .tipa при вызове этой команды
-          make package FINALPACKAGE=1
+          # Передаем правильный путь напрямую в Makefile
+          make package FINALPACKAGE=1 THEOS=$THEOS
           
-          # Копируем готовый файл в корень для отправки в артефакты
+          # Сохраняем скомпилированные файлы для отправки в артефакты сайта
           cp packages/*.tipa ./ 2>/dev/null || cp packages/*.deb ./ 2>/dev/null || true
     artifacts:
       - "*.tipa"
